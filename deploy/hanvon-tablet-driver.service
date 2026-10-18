@@ -1,0 +1,13 @@
+[Unit]
+Description=Hanvon tablet driver
+After=graphical-session.target
+
+[Service]
+Type=simple
+ExecStart=%h/.local/bin/hanvon-tablet-driver
+Restart=on-failure
+RestartSec=2
+Environment=RUST_BACKTRACE=1
+
+[Install]
+WantedBy=default.target

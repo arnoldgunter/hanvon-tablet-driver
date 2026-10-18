@@ -1,0 +1,9 @@
+[package]
+name = "hanvon-tablet-driver"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+evdev = "0.12"
+futures-lite = "2"
+nusb = "0.2.8"

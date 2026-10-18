@@ -1,0 +1,2 @@
+SUBSYSTEM=="usb", ATTR{idVendor}=="0b57", ATTR{idProduct}=="8503", MODE="0660", GROUP="input"
+KERNEL=="uinput", MODE="0660", GROUP="input"
