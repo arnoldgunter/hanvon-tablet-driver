@@ -27,7 +27,8 @@ jobs:
           cp target/release/hanvon-tablet-driver dist/hanvon-tablet-driver/
           cp -r deploy dist/hanvon-tablet-driver/
           cp install.sh README.md dist/hanvon-tablet-driver/
-          tar -C dist -czf "hanvon-tablet-driver-${GITHUB_REF_NAME}-x86_64-linux.tar.gz" hanvon-tablet-driver
+          tar -czf "dist/hanvon-tablet-driver-${GITHUB_REF_NAME}-x86_64-linux.tar.gz" \
+            -C dist hanvon-tablet-driver
 
       - name: Create GitHub release
         env:
