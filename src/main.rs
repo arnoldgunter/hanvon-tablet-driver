@@ -72,7 +72,7 @@ fn read_tablet_stream(device: nusb::Device) -> Result<(), Box<dyn std::error::Er
     }
 
     // The tablet has no kernel driver bound, so claim its configured HID interface.
-    let interface = device.claim_interface(0).wait()?;
+    let interface = device.detach_and_claim_interface(0).wait()?;
 
     // Endpoint 0x81 is the tablet's interrupt IN endpoint.
     let endpoint_address = 0x81;
