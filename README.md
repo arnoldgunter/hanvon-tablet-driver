@@ -6,13 +6,10 @@ Userspace Linux driver for the Hanvon AM0605 tablet (`0b57:8503`).
 
 - Linux with systemd user services
 - A direct USB 2.0 connection or USB 2.0 hub
-- Membership in the `input` group
 
-Add your user to the `input` group if necessary, then log out and back in:
-
-```bash
-sudo usermod -aG input "$USER"
-```
+The installer uses a device-specific udev rule with `uaccess`. This grants
+access to the active local user without adding the user to the global
+`input` group. A systemd-logind session is required.
 
 The tablet has known USB 3.x compatibility problems. USB 2.0 is recommended.
 
