@@ -19,6 +19,10 @@ extract it, and run:
 ./install.sh
 ```
 
+Run the installer as your normal user, not with `sudo`. It uses `sudo`
+itself only for installing the udev rule; the systemd service must be
+installed in your user account.
+
 The installer:
 
 - installs the binary into `~/.local/bin`

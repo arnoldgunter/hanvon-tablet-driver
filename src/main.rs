@@ -29,34 +29,36 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             HotplugEvent::Connected(d) => {
                 if d.vendor_id() == hanvon_vendor_id {
                     start_tablet_stream(d);
-                } else {
-                    println!("Non-Hanvon device connected");
                 }
             }
-            _ => {
-                println!("Device disconnected");
-            }
+            HotplugEvent::Disconnected(_) => {}
         }
     }
     Ok(())
 }
 
 fn start_tablet_stream(info: DeviceInfo) {
-    println!("Hanvon Tablet erkannt! Versuche Treiber-Stream zu starten...");
+    println!(
+        "Hanvon tablet detected (USB {:04x}:{:04x}). Starting input stream...",
+        info.vendor_id(),
+        info.product_id()
+    );
 
     match info.open().wait() {
         Ok(device) => {
             thread::spawn(move || {
                 if let Err(e) = read_tablet_stream(device) {
-                    eprintln!("Fehler beim Lesen des Tablets: {}", e);
+                    eprintln!("Tablet input stream stopped with an error: {e}");
                 }
             });
         }
-        Err(e) => eprintln!("Konnte Gerät nicht öffnen (Rechte?): {}", e),
+        Err(e) => eprintln!(
+            "Could not open the tablet. Check the USB connection and udev permissions: {e}"
+        ),
     }
 }
 
-// Die eigentliche Treiber-Logik zum Auslesen der USB-Pakete
+// Read tablet reports and forward them to the virtual input device.
 fn read_tablet_stream(device: nusb::Device) -> Result<(), Box<dyn std::error::Error>> {
     let configuration = device.active_configuration().map_err(|error| {
         format!("Tablet has no active USB configuration; check the USB connection: {error}")
@@ -72,7 +74,7 @@ fn read_tablet_stream(device: nusb::Device) -> Result<(), Box<dyn std::error::Er
     // The tablet has no kernel driver bound, so claim its configured HID interface.
     let interface = device.claim_interface(0).wait()?;
 
-    // 3. Den richtigen Interrupt-In-Endpunkt definieren.
+    // Endpoint 0x81 is the tablet's interrupt IN endpoint.
     let endpoint_address = 0x81;
     let mut endpoint = interface.endpoint::<Interrupt, In>(endpoint_address)?;
     let mut mouse = create_virtual_tablet()?;
@@ -80,7 +82,7 @@ fn read_tablet_stream(device: nusb::Device) -> Result<(), Box<dyn std::error::Er
     let mut pen_button_down = false;
     let mut filtered_position = None;
 
-    println!("Treiber aktiv. Warte auf Stifteingabe...");
+    println!("Tablet driver is active. Waiting for pen input...");
     endpoint.submit(Buffer::new(10));
 
     loop {
@@ -131,12 +133,12 @@ fn read_tablet_stream(device: nusb::Device) -> Result<(), Box<dyn std::error::Er
                     endpoint.submit(data);
                 }
                 Err(e) => {
-                    println!("Verbindung zum Tablet abgebrochen (oder unplugged): {}", e);
-                    break; // Schleife verlassen, Thread beenden
+                    println!("Tablet disconnected or USB read failed: {e}");
+                    break;
                 }
             },
             None => {
-                println!("Warten auf Tablet-Daten wurde unerwartet beendet");
+                println!("Tablet input stream ended unexpectedly.");
                 break;
             }
         }

@@ -1,6 +1,11 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+if [[ "${EUID}" -eq 0 ]]; then
+  printf 'Do not run this installer with sudo. Run it as your normal user; sudo is used only for udev rules.\n' >&2
+  exit 1
+fi
+
 install_dir="${HOME}/.local/bin"
 service_dir="${XDG_CONFIG_HOME:-${HOME}/.config}/systemd/user"
 script_dir="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
@@ -16,7 +21,8 @@ sudo udevadm control --reload-rules
 sudo udevadm trigger
 
 systemctl --user daemon-reload
-systemctl --user enable --now hanvon-tablet-driver.service
+systemctl --user cat hanvon-tablet-driver.service >/dev/null
+systemctl --user --quiet enable --now hanvon-tablet-driver.service
 
-printf 'Hanvon driver installed and started.\\n'
-printf 'Logs: journalctl --user -u hanvon-tablet-driver.service -f\\n'
+printf 'Hanvon tablet driver installed and started in the background.\n'
+printf 'Follow logs with: journalctl --user -u hanvon-tablet-driver.service -f\n'
